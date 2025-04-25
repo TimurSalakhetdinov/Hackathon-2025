@@ -7,21 +7,34 @@ model = YOLO("best.pt")  # Make sure this model file is present in the root fold
 
 app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"status": "ok"}
-
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    print(f"Received file: {file.filename}")
-    image = Image.open(io.BytesIO(await file.read()))
-    results = model.predict(image, conf=0.25)
-    
-    labels = results[0].names
-    detections = results[0].boxes.cls.tolist()
-    is_broken = any(int(cls_id) == 0 for cls_id in detections)
+    try:
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents)).convert("RGB")
+        results = model.predict(image, conf=0.1)
 
-    return {
-        "broken_detected": is_broken,
-        "detections": len(detections),
-    }
+        if not results or not results[0].boxes:
+            return JSONResponse(content={
+                "broken_detected": False,
+                "detections": 0
+            })
+
+        detections = results[0].boxes.cls.tolist()
+        is_broken = any(int(cls_id) == 0 for cls_id in detections)
+
+        return {
+            "broken_detected": is_broken,
+            "detections": len(detections)
+        }
+
+    except UnidentifiedImageError:
+        return JSONResponse(
+            content={"error": "Could not process image."},
+            status_code=400
+        )
+    except Exception as e:
+        return JSONResponse(
+            content={"error": f"Unexpected server error: {str(e)}"},
+            status_code=500
+        )

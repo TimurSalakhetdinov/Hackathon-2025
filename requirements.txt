@@ -2,4 +2,5 @@ ultralytics==8.3.0
 fastapi
 uvicorn
 pillow
+torch
 python-multipart

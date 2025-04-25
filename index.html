@@ -44,8 +44,10 @@
   
         const data = await response.json();
         console.log(data);
-  
-        if (data.detections === 0) {
+
+        if (data.error) {
+          resultDiv.innerHTML = `❌ ${data.error}`;
+        } else if (data.detections === 0) {
           resultDiv.innerHTML = `⚠️ No tiles detected in this image`;
         } else if (data.broken_detected) {
           resultDiv.innerHTML = `🟥 Broken tile(s) detected<br>Total detections: ${data.detections}`;

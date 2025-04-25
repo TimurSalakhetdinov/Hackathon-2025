@@ -41,10 +41,16 @@
         const data = await response.json();
         console.log(data);
 
-        if (data.broken_detected) {
-          resultDiv.innerHTML = `🟥 Broken tile(s) detected<br>Total detections: ${data.detections}`;
+        if ('broken_detected' in data) {
+          if (data.detections === 0) {
+            resultDiv.innerHTML = `✅ Image processed. No tiles detected.`;
+          } else if (data.broken_detected) {
+            resultDiv.innerHTML = `🟥 Broken tile(s) detected<br>Total detections: ${data.detections}`;
+          } else {
+            resultDiv.innerHTML = `✅ No broken tiles detected`;
+          }
         } else {
-          resultDiv.innerHTML = `✅ No broken tiles detected`;
+          resultDiv.innerHTML = '❌ Unexpected server response.';
         }
       } catch (err) {
         resultDiv.innerHTML = '❌ Error processing the image.';
